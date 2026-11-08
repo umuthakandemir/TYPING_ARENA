@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" name="viewport"/>
+  <title>
+   TYPING ARENA
+  </title>
+  <link href="/styles.css" rel="stylesheet"/>
+ </head>
+ <body data-background="space" data-palette="neon">
+  <div class="backdrop" id="backdrop">
+  </div>
+  <canvas id="fx">
+  </canvas>
+  <!-- Oyun HUD bölümü: skor, kombo, kalkan ve ayarlar göstergeleri. -->
+<header class="hud">
+   <div class="brand">
+    TYPING
+    <span>
+     ARENA
+    </span>
+   </div>
+   <div>
+    SKOR
+    <b id="score">
+     0
+    </b>
+   </div>
+   <div>
+    KOMBO
+    <b id="combo">
+     0
+    </b>
+   </div>
+   <div>
+    KALKAN
+    <b id="shield">
+     100%
+    </b>
+   </div>
+   <div>
+    &Idot;LERLEME
+    <b id="progress">
+     0/0
+    </b>
+   </div>
+   <button class="small" id="settingsBtn">
+    AYARLAR
+   </button>
+  </header>
+  <!-- Yan paneller: sıradaki hedefler ve tamamlanan kelimeler/oyuncular. -->
+<aside class="side left">
+   <h3>
+    SIRADAK&Idot; HEDEFLER
+   </h3>
+   <div id="queueList">
+   </div>
+  </aside>
+  <aside class="side right">
+   <h3>
+    TAMAMLANANLAR
+   </h3>
+   <div id="writtenList">
+   </div>
+   <div class="playersTitle">
+    OYUNCULAR
+   </div>
+   <div id="players">
+   </div>
+  </aside>
+  <!-- Ana savaş alanı: lazer katmanı, düşen hedefler ve uzay gemisi. -->
+<main id="arena">
+   <canvas id="laser">
+   </canvas>
+   <div class="wordLayer" id="wordLayer">
+   </div>
+   <div class="ship">
+   </div>
+   <div class="engine">
+   </div>
+  </main>
+  <section aria-label="Ekran klavyesi" class="keyboard" id="keyboard">
+  </section>
+  <div class="mobileTypeBar" id="mobileTypeBar">
+   <label for="mobileInput">
+    HEDEF&Idot; YAZ
+   </label>
+   <input autocapitalize="off" autocomplete="off" enterkeyhint="done" id="mobileInput" inputmode="text" placeholder="Buraya dokun ve yaz&hellip;" spellcheck="false" type="text"/>
+   <button id="mobileClear" type="button">
+    S&Idot;L
+   </button>
+  </div>
+  <!-- Başlangıç menüsü, avatar seçimi, oda yönetimi ve görünüm ayarları. -->
+<div class="modal" id="menu">
+   <section class="panel">
+    <h1>
+     TYPING ARENA
+    </h1>
+    <p id="message">
+     Yakla&scedil;an hedefleri kilitle, do&gbreve;ru yazarak imha et.
+    </p>
+    <div class="tabs">
+     <button class="active" data-tab="solo">
+      TEK OYUNCU
+     </button>
+     <button data-tab="multi">
+      &Ccedil;OK OYUNCULU
+     </button>
+     <button data-tab="custom">
+      &Ouml;ZEL KEL&Idot;MELER
+     </button>
+    </div>
+    <div class="profileBox">
+     <h3>
+      P&Idot;LOT PROF&Idot;L&Idot;
+     </h3>
+     <label>
+      Oyuncu ad&inodot;
+      <input id="pilotName" maxlength="18" placeholder="Oyuncu ad&inodot;n"/>
+     </label>
+     <p>
+      25 avatardan birini se&ccedil;:
+     </p>
+     <div aria-label="Avatar se&ccedil;imi" class="avatarPicker" id="avatarPicker">
+     </div>
+    </div>
+    <div id="soloPane">
+     <label>
+      Oyun modu
+      <select id="mode">
+       <option value="level">
+        Seviyeli
+       </option>
+       <option value="custom">
+        Serbest / &ouml;zel metin
+       </option>
+      </select>
+     </label>
+     <label>
+      Seviye
+      <select id="level">
+      </select>
+     </label>
+    </div>
+    <div class="hidden" id="customPane">
+     <label>
+      &Ouml;zel kelime/metin
+      <textarea id="customText">pencere kitap zaman &scedil;ehir d&uuml;&scedil;&uuml;nce arkada&scedil; deniz yolculuk mektup bah&ccedil;e m&uuml;zik kalem orman nehir bulut kahve hikaye gelecek &ouml;zg&uuml;rl&uuml;k</textarea>
+     </label>
+     <label>
+      Ekranda ayn&inodot; anda hedef
+      <input id="maxWords" max="6" min="1" type="range" value="3"/>
+     </label>
+     <label>
+      Hedef d&uuml;&scedil;&uuml;&scedil; h&inodot;z&inodot;
+      <input id="speed" max="10" min="1" type="range" value="4"/>
+     </label>
+    </div>
+    <div class="hidden" id="multiPane">
+     <label>
+      Oyun t&uuml;r&uuml;
+      <select id="multiMode">
+       <option value="level">
+        Seviyeli
+       </option>
+       <option value="custom">
+        &Ouml;zel metin
+       </option>
+      </select>
+     </label>
+     <div class="hidden" id="multiCustom">
+      <label>
+       Ortak &ouml;zel metin
+       <textarea id="multiCustomText"></textarea>
+      </label>
+      <label>
+       Ekranda ayn&inodot; anda hedef
+       <input id="multiMax" max="6" min="1" type="range" value="3"/>
+      </label>
+      <label>
+       D&uuml;&scedil;&uuml;&scedil; h&inodot;z&inodot;
+       <input id="multiSpeed" max="10" min="1" type="range" value="4"/>
+      </label>
+     </div>
+     <label>
+      Oyuncu ad&inodot;
+      <input id="nickname" maxlength="18" placeholder="Oyuncu ad&inodot;"/>
+     </label>
+     <div class="roomActions">
+      <button id="createRoom">
+       ODA KUR
+      </button>
+      <input id="roomCode" maxlength="6" placeholder="ODA KODU"/>
+      <button id="joinRoom">
+       KATIL
+      </button>
+     </div>
+     <p id="roomInfo">
+      Oda kur veya kodla kat&inodot;l. Oda sahibi ba&scedil;lat&inodot;r.
+     </p>
+     <div id="lobby">
+     </div>
+     <button class="primary hidden" id="startRoom">
+      OYUNU BA&Scedil;LAT (ADM&Idot;N)
+     </button>
+    </div>
+    <div class="settings">
+     <h3>
+      G&Ouml;R&Uuml;N&Uuml;M VE SES
+     </h3>
+     <div class="settingGrid">
+      <label>
+       Renk paleti
+       <select id="palette">
+        <option value="neon">
+         Neon mavi
+        </option>
+        <option value="matrix">
+         Matrix ye&scedil;il
+        </option>
+        <option value="sunset">
+         G&uuml;n bat&inodot;m&inodot;
+        </option>
+        <option value="ice">
+         Buz
+        </option>
+        <option value="amber">
+         Amber
+        </option>
+        <option value="light">
+         A&ccedil;&inodot;k tema
+        </option>
+       </select>
+      </label>
+      <label>
+       Arka plan
+       <select id="background">
+        <option value="space">
+         Derin uzay
+        </option>
+        <option value="matrix">
+         Matrix kod ya&gbreve;muru
+        </option>
+        <option value="nebula">
+         Nebula
+        </option>
+        <option value="planet">
+         Gezegen ufku
+        </option>
+        <option value="grid">
+         Holografik &inodot;zgara
+        </option>
+        <option value="image">
+         &Ouml;zel resim
+        </option>
+       </select>
+      </label>
+      <label>
+       Arka plan resmi
+       <input accept="image/*" id="bgImage" type="file"/>
+      </label>
+      <label>
+       Kutu rengi
+       <input id="boxColor" type="color" value="#07182b"/>
+      </label>
+      <label>
+       Kutu kenarl&inodot;&gbreve;&inodot;
+       <input id="borderColor" type="color" value="#36dfff"/>
+      </label>
+      <label>
+       Kelime yaz&inodot; rengi
+       <input id="wordColor" type="color" value="#f3fbff"/>
+      </label>
+      <label>
+       Yaz&inodot; boyutu
+       <input id="fontSize" max="34" min="14" type="range" value="20"/>
+      </label>
+      <label>
+       Yaz&inodot; keskinli&gbreve;i
+       <input id="sharpness" max="20" min="0" type="range" value="8"/>
+      </label>
+      <label>
+       Vurgu rengi
+       <input id="accentColor" type="color" value="#ff4fd8"/>
+      </label>
+     </div>
+     <div class="themeActions">
+      <input id="themeName" maxlength="24" placeholder="Temaya bir ad ver"/>
+      <button id="saveTheme">
+       TEMAYI KAYDET
+      </button>
+      <select id="savedThemes">
+       <option value="">
+        Kay&inodot;tl&inodot; temalar
+       </option>
+      </select>
+      <button id="loadTheme">
+       Y&Uuml;KLE
+      </button>
+      <button id="deleteTheme">
+       S&Idot;L
+      </button>
+     </div>
+     <div class="settingGrid">
+      <label>
+       Ses paketi
+       <select id="soundPack">
+        <option value="synth">
+         Synthwave
+        </option>
+        <option value="laser">
+         Lazer
+        </option>
+        <option value="arcade">
+         Arcade
+        </option>
+        <option value="soft">
+         Yumu&scedil;ak
+        </option>
+        <option value="off">
+         Sessiz
+        </option>
+       </select>
+      </label>
+      <label class="check">
+       <input checked="" id="sound" type="checkbox"/>
+       Ses efektleri
+      </label>
+      <label class="check">
+       <input checked="" id="showKeyboard" type="checkbox"/>
+       Ekran klavyesi
+      </label>
+     </div>
+    </div>
+    <div class="actions">
+     <button class="primary" id="startSolo">
+      OYUNA BA&Scedil;LA
+     </button>
+     <button class="hidden" id="resume">
+      DEVAM ET
+     </button>
+    </div>
+    <small>
+     Yaln&inodot;zca kilitli hedefe yazabilirsin &middot; Mobilde alttaki yaz&inodot; alan&inodot;na dokun &middot; Backspace: harf sil &middot; Esc: duraklat
+    </small>
+   </section>
+  </div>
+  <script src="/app.js">
+  </script>
+ </body>
+</html>
